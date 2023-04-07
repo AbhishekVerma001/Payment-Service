@@ -1,7 +1,6 @@
 package com.ecommerce;
 
 import static org.junit.Assert.assertNotNull;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -9,7 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.Assertions;
-
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,21 +16,19 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.ecommerce.dao.CustomerRepository;
-
+import com.ecommerce.dto.AuthRequest;
+import com.ecommerce.dto.JwtResponse;
 import com.ecommerce.dto.Purchase;
 import com.ecommerce.dto.PurchaseResponse;
 import com.ecommerce.entity.Address;
 import com.ecommerce.entity.Customer;
 import com.ecommerce.entity.Order;
 import com.ecommerce.entity.OrderItem;
-import com.ecommerce.service.CheckoutServiceImpl;
-import com.google.gson.JsonObject;
 
 
 @DirtiesContext
@@ -41,7 +37,10 @@ import com.google.gson.JsonObject;
 class PaymentApplicationTests {
 	@Autowired
 	TestRestTemplate restTemplate;
+	
 	Purchase p=new Purchase();
+	AuthRequest auth =new AuthRequest();
+	
 	@Autowired
 	CustomerRepository customerRepository;
 
@@ -50,6 +49,29 @@ class PaymentApplicationTests {
 	}
 	@Test
     public void testPlaceOrder() throws Exception {
+		final String tokenUrl = "http://localhost:8080/auth/token";
+        URI tokenUri = new URI(tokenUrl);
+        auth.setUsername("Abc@gmail.com");
+		auth.setPassword("A1234567");
+         
+        HttpHeaders tokenHeaders = new HttpHeaders();
+        tokenHeaders.set("Content-Type", "application/json");
+        
+        
+        
+        HttpEntity<AuthRequest> tokenRequest = new HttpEntity<>(auth, tokenHeaders);
+         
+        ResponseEntity<JwtResponse> tokenResult = this.restTemplate.postForEntity(tokenUri, tokenRequest, JwtResponse.class);
+        String token=tokenResult.getBody().getToken();
+	
+        System.out.println(token);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+        headers.add("Authorization", "Bearer "+token);
+        //HttpEntity<Product> request = new HttpEntity<>( headers);
+		
+		
+		
 		
 		OrderItem oi=new OrderItem();
 		oi.setImageUrl("assets/images/products/Men/Shoes/51.jpg");
@@ -113,9 +135,9 @@ class PaymentApplicationTests {
 		p.setShippingAddress(shippingAddress);
 		p.setOrder(o);
 		p.setOrderItems(orderItems);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/json");
-        headers.add("Authorization", "Bearer "+"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBYmNAZ21haWwuY29tIiwiaWF0IjoxNjgwNDQ4NjIwLCJleHAiOjE2ODA0NTA0MjB9.4YJBwPZ71CYr6xMQXqNXn5E2uIJ13WMW1QCMxVHr-8M");
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add("Content-Type", "application/json");
+//        headers.add("Authorization", "Bearer "+"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBYmNAZ21haWwuY29tIiwiaWF0IjoxNjgwNDQ4NjIwLCJleHAiOjE2ODA0NTA0MjB9.4YJBwPZ71CYr6xMQXqNXn5E2uIJ13WMW1QCMxVHr-8M");
         HttpEntity<Purchase> request = new HttpEntity<>(p, headers);
         
         //ResponseEntity<Product> result = this.restTemplate.postForEntity(uri, request, UserCredential.class);
